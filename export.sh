@@ -1,3 +1,2 @@
 #!/bin/bash
-cp -r version ../version && cp -r web.app ../web.app && cp -r manifest.json ../manifest.json
-rm -rf ../../../../../public/app && mkdir ../../../../../public/app && cp -a dist/symbiose/* ../../../../../public/app/
+rm ../web.app; rm ../manifest.json; rm ../version; cp web.app ../web.app; cp manifest.json ../manifest.json; cp version ../version
