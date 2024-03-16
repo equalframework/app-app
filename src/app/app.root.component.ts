@@ -7,7 +7,7 @@ import { type } from 'jquery';
 
 
 /*
-This is the component that is bootstrapped by app.module.ts
+    This is the component that is bootstrapped by app.module.ts
 */
 
 declare global {
@@ -24,13 +24,21 @@ export class AppRootComponent implements OnInit {
     public show_side_menu: boolean = false;
     public show_side_bar: boolean = true;
 
+    public show_search_side_menu: boolean = false;
+
     public filter: string;
 
-    public package: string;
+    // id of the targeted app
     public app: string;
 
-    // name of the App
+    // id of the package the app belongs to
+    public package: string;
+
+    // display name of the App
     public name: string;
+
+    // original default context, if provided
+    private originalContext: any = {};
 
     // original (full & translated) menu for left pane
     private leftMenu: any = {};
@@ -51,53 +59,62 @@ export class AppRootComponent implements OnInit {
 
 
     public async ngOnInit() {
-
         try {
             await this.auth.authenticate();
         }
         catch(err) {
-            window.location.href = '/auth';
+            window.location.href = '/auth?redirect_to='+encodeURIComponent(window.location.pathname + window.location.hash);
             return;
         }
 
-        // load app specifics params & menus
-        this.loadParams();
-
-        this.params.pathParam.subscribe( (param:any) => {
+        this.params.pathParam.subscribe( async (param:any) => {
             this.package = param.package;
             this.app = param.app;
+            // (re)load app specifics params & menus
+            await this.loadParams();
+            // if a context was provided, use it as default
+            if(Object.keys(this.originalContext).length) {
+                this.onSelectItem({'context': this.originalContext});
+            }
         });
 
     }
 
     private loadParams() {
-        this.env.getEnv().then( async (environment:any) => {
+        return this.env.getEnv().then( async (environment:any) => {
             // retrieve current app params
             try {
                 const data:any = await this.api.fetch('/?get=appinfo&package='+this.package+'&app='+this.app);
                 if(data.hasOwnProperty('name')) {
                     this.name = data.name;
                 }
-                if(data.hasOwnProperty('params') && data.params.hasOwnProperty('menus')) {
-                    if(data.params.menus.hasOwnProperty('top')) {
-                        const topMenu:any = await this.api.getMenu(this.package, data.params.menus.top);
-                        this.topMenuItems = topMenu.items;
-                        this.translationsMenuTop = topMenu.translation;
+                if(data.hasOwnProperty('params')) {
 
+                    // handle default context
+                    if(data.params.hasOwnProperty('context')) {
+                        this.originalContext = data.params.context;
                     }
-                    if(data.params.menus.hasOwnProperty('left')) {
-                        const leftMenu = await this.api.getMenu(this.package, data.params.menus.left);
-                        // store full translated menu
-                        this.leftMenu = this.translateMenu(leftMenu.items, leftMenu.translation);
-                        // fill left pane with unfiltered menu
-                        this.navMenuItems = this.leftMenu;
+                    // handle menus
+                    if(data.params.hasOwnProperty('menus')) {
+                        if(data.params.menus.hasOwnProperty('top')) {
+                            const topMenu:any = await this.api.getMenu(this.package, data.params.menus.top);
+                            this.topMenuItems = topMenu.items;
+                            this.translationsMenuTop = topMenu.translation;
+                        }
+                        if(data.params.menus.hasOwnProperty('left')) {
+                            const leftMenu = await this.api.getMenu(this.package, data.params.menus.left);
+                            this.show_search_side_menu = leftMenu.show_search;
+                            // store full translated menu
+                            this.leftMenu = this.translateMenu(leftMenu.items, leftMenu.translation);
+                            // fill left pane with unfiltered menu
+                            this.navMenuItems = this.leftMenu;
+                        }
                     }
                 }
             }
             catch(response) {
                 console.warn('unexpected error', response);
             }
-
         });
     }
 
@@ -223,4 +240,5 @@ export class AppRootComponent implements OnInit {
     public toggleSideBar() {
         this.show_side_bar = !this.show_side_bar;
     }
+
 }
