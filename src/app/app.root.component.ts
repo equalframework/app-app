@@ -57,8 +57,9 @@ export class AppRootComponent implements OnInit {
         private params: AppStateService
     ) {}
 
-
     public async ngOnInit() {
+        this.captureSystemInfo();
+
         try {
             await this.auth.authenticate();
         }
@@ -151,6 +152,17 @@ export class AppRootComponent implements OnInit {
             }
         }
         return result;
+    }
+
+    private captureSystemInfo() {
+        // #memo - we use navigator.platform and navigator.vendor despite being marked as deprecated since there is no replacement
+        let info = {
+            resolution: window.screen.width + 'x' + window.screen.height,
+            platform: navigator.hasOwnProperty('platform')?navigator.platform:'',
+            vendor: navigator.hasOwnProperty('vendor')?navigator.vendor:''
+        };
+
+        document.cookie = `system_info=${JSON.stringify(info)}; path=/; max-age=${60 * 60 * 24 * 365}`;
     }
 
     public onchangeFilter() {
