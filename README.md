@@ -9,7 +9,7 @@ By leveraging Material Design and Angular UI contexts, STD App offers a streamli
 
 Run `./serve.sh` for a dev server. Navigate to `http://equal.local:4200/`. The app will automatically reload if you change any of the source files.
 
-Running `./build.sh` produces a `web.app` archive holding the full transpiled version of the App (ES2015), along with an addition version file holding the MD5 signature of the archive.
+Running `./build.sh` produces a `web.app` archive holding the full transpiled version of the App (ES2015), along with an addition `version`  file holding the MD5 signature of the archive.
 
 Running `./export.sh` will export the `manifest.json`, `version`, and `web.app` files to the parent folder (which is expected to be the `app` folder located under `packages/core/apps`).
 
